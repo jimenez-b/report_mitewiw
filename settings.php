@@ -25,11 +25,17 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
+/*if ($hassiteconfig) {
     $settings = new admin_settingpage('report_mitewiw_settings', new lang_string('pluginname', 'report_mitewiw'));
 
     // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf
     if ($ADMIN->fulltree) {
         // TO-DO: Define actual plugin settings page and add it to the tree - {@link https://docs.moodle.org/dev/Admin_settings}.
     }
-}
+}*/
+
+$ADMIN->add('reports', new admin_externalpage('reportmitewiw', get_string('pluginname', 'report_mitewiw'), "$CFG->wwwroot/report/mitewiw/index.php"));
+
+// no report settings
+$settings = null;
+

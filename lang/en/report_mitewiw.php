@@ -19,10 +19,21 @@
  *
  * @package     report_mitewiw
  * @category    string
- * @copyright   2026 Brandon Jimenez <brandon.jimenez@concordia.ca>
+ * @author      Brandon Jimenez <brandon.jimenez@concordia.ca>
+ * @copyright   Concordia University
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace report_mitewiw;
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'Mitewiw Plugin reporting tool';
+$string['pluginname']           = 'Mitewiw Plugin reporting tool';
+$string['reportname']           = 'Mitewiw Plugin auditing and reporting tool';
+$string['notyet']               = 'Not yet def';
+$string['noexternalsource']     = 'moodle.org';
+$string['pluginorigincore']     = 'HQ / core';
+$string['pluginorigininternal'] = 'Locally developped';
+$string['pluginoriginexternal'] = 'Third party';
+$string['pluginadmin']          = 'Plugins only for the admins';
+$string['pluginstudent']        = 'Plugins used by student';
+$string['pluginteacher']        = 'Plugins used by only the teachers';
