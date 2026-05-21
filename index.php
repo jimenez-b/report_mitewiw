@@ -62,6 +62,11 @@ $tabs = [
         new moodle_url($baseurl, ['view' => 'detailed']),
         get_string('tab_detailed', 'report_mitewiw')
     ),
+    new tabobject(
+        'ltis',
+        new moodle_url($baseurl, ['view' => 'ltis']),
+        get_string('tab_ltis', 'report_mitewiw')
+    ),
 ];
 echo $OUTPUT->tabtree($tabs, $view);
 
@@ -75,6 +80,7 @@ switch ($view) {
         $items = [get_string('componentsgeneral', 'report_mitewiw'),get_string('componentsusage', 'report_mitewiw'),get_string('componentsdetailed', 'report_mitewiw')];
         $attributes = ['class' => 'list'];
         echo html_writer::alist($items, $attributes, 'ol');
+        echo html_writer::tag('p', get_string('uncededland', 'report_mitewiw'));
         echo html_writer::tag('p', get_string('moreinfo', 'report_mitewiw'));
         echo html_writer::end_div();
         break;
@@ -113,25 +119,44 @@ switch ($view) {
                         } 
                     }
                 }
+                $simple = '';
+                $main_user = helper::determine_main_user($t, $simple);
+                if ($simple == 'student'){
+                   $total_critical++; 
+                }
+                $actively = helper::determine_actively($t);
+                if ($actively == 'actively'){
+                   $total_actively_used++; 
+                }
             }
         }
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable';
-        $table->head = [get_string('indicator', 'report_mitewiw'),
+        $table_totals = new html_table();
+        $table_totals->attributes['class'] = 'generaltable';
+        $table_totals->head = [get_string('indicator', 'report_mitewiw'),
                         get_string('value', 'report_mitewiw')];
 
-        $table->data = [
+        $table_totals->data = [
                         [get_string('totalplugins', 'report_mitewiw'),$total_plugins],
                         [get_string('totalcore', 'report_mitewiw'),$total_HQCore_plugins],
                         [get_string('totalcatalyst', 'report_mitewiw'),$total_catalyst_plugins],
                         [get_string('totalnoncatalyst', 'report_mitewiw'),$total_noncatalyst_plugins],
                         [get_string('totalinternal', 'report_mitewiw'),$total_internal_plugins]
                         ];
+
+        //$total_actively_used = rand(1, 100);
+        $table_active = new html_table();
+        $table_active->attributes['class'] = 'generaltable';
+        $table_active->head = [get_string('indicator', 'report_mitewiw'),
+                        get_string('value', 'report_mitewiw')];
         
+        $table_active->data = [
+                        [get_string('totalcritical', 'report_mitewiw'),$total_critical],
+                        [get_string('totalactive', 'report_mitewiw'),$total_actively_used]
+                        ];
         echo html_writer::start_div('container-fluid');
         echo html_writer::start_div('row');
         echo html_writer::start_div('col-6');
-        echo html_writer::table($table);
+        echo html_writer::table($table_totals);
         echo html_writer::end_div();
         echo html_writer::start_div('col-6');
         $CFG->chart_colorset = ['#F98012', '#880000', '#028609', '#0072a8'];
@@ -139,37 +164,115 @@ switch ($view) {
         $serie = new core\chart_series('Plugins installed', [$total_HQCore_plugins, $total_catalyst_plugins, $total_noncatalyst_plugins, $total_internal_plugins]);
         $chart->set_doughnut(true);
         $chart->add_series($serie);
-        $chart->set_title(get_string('totalplugins', 'report_mitewiw'));
+        $chart->set_title(get_string('totalplugins', 'report_mitewiw').": $total_plugins");
         $chart->set_labels([get_string('totalchartcore', 'report_mitewiw'),get_string('totalchartcatalyst', 'report_mitewiw'),get_string('totalchartnoncatalyst', 'report_mitewiw'),get_string('totalchartinternal', 'report_mitewiw')]);
         echo $OUTPUT->render($chart);
         echo html_writer::end_div();
         echo html_writer::end_div();
+        echo html_writer::empty_tag('hr');
+        echo html_writer::start_div('row');
+        echo html_writer::start_div('col-6');
+        echo html_writer::table($table_active);
         echo html_writer::end_div();
-        /*
-        Indicateur / Valeur
-        Nombre de plugins activement utilisés (visibles)
-        Nombre de plugins critiques (impact direct étudiants)
-        */
+        echo html_writer::start_div('col-6');
+        $chart = new core\chart_bar();
+        $chart->set_horizontal(true);
+        //$chart->set_stacked(true);
+        $serie1 = new core\chart_series(get_string('totalplugins', 'report_mitewiw'), [$total_plugins, $total_plugins]);
+        $serie2 = new core\chart_series(get_string('active/critical', 'report_mitewiw'), [$total_critical, $total_actively_used]);
+        $chart->add_series($serie1);
+        $chart->add_series($serie2);
+        $chart->set_labels([get_string('totalcriticalshort', 'report_mitewiw'),get_string('totalactiveshort', 'report_mitewiw')]);
+        echo $OUTPUT->render($chart, false);
+        echo html_writer::end_div();
+        echo html_writer::end_div();
+        echo html_writer::end_div();
         break;
     case 'usage':
         echo $OUTPUT->heading(get_string('usageoverview', 'report_mitewiw'));
 
+        $total_plugins = 0;
+        $total_students = 0;
+        $total_teachers = 0;
+        $total_admins = 0;
+        $total_content = 0;
+        $total_evaluate = 0;
         
+        $pmb = \core_plugin_manager::instance();
+        $types = $pmb->get_plugin_types();
+
+        foreach ($types as $t => $path) {
+            $plugins = $pmb->get_installed_plugins($t);
+            foreach ($plugins as $p => $version) {
+                $total_plugins ++;
+                $simple = '';
+                $main_user = helper::determine_main_user($t, $simple);
+                switch ($simple) {
+                    case 'student':
+                        $total_students++;
+                        break;
+                    case 'teacher':
+                        $total_teachers++;
+                        break;
+                    case 'admin':
+                        $total_admins++;
+                        break;
+                }
+            }
+        }
+
+        $table_totals = new html_table();
+        $table_totals->attributes['class'] = 'generaltable';
+        $table_totals->head = [get_string('indicator', 'report_mitewiw'),
+                        get_string('value', 'report_mitewiw')];
+
+        $table_totals->data = [
+                        [get_string('pluginstudent', 'report_mitewiw'),$total_students],
+                        [get_string('pluginteacher', 'report_mitewiw'),$total_teachers],
+                        [get_string('pluginadmin', 'report_mitewiw'),$total_admins],
+                        [get_string('totalplugins', 'report_mitewiw'),$total_plugins]
+                        ];
+        
+        echo html_writer::start_div('container-fluid');
+        echo html_writer::start_div('row');
+        echo html_writer::start_div('col-6');
+        echo html_writer::table($table_totals);
+        echo html_writer::end_div();
+        echo html_writer::start_div('col-6');
+        $CFG->chart_colorset = ['#508212', '#004085', '#c9a859'];
+        $chart = new \core\chart_pie();
+        $serie = new core\chart_series('Plugins installed', [$total_students, $total_teachers, $total_admins]);
+        $chart->set_doughnut(true);
+        $chart->add_series($serie);
+        $chart->set_title(get_string('totalplugins', 'report_mitewiw').": $total_plugins");
+        $chart->set_labels([get_string('pluginstudent', 'report_mitewiw'),get_string('pluginteacher', 'report_mitewiw'),get_string('pluginadmin', 'report_mitewiw')]);
+        echo $OUTPUT->render($chart);
+        echo html_writer::end_div();
+        echo html_writer::end_div();
+        /*
+        echo html_writer::empty_tag('hr');
+        echo html_writer::start_div('row');
+        echo html_writer::start_div('col-6');
         $lalo = helper::get_nodef();
-        echo "<p>Plugins used by student $lalo</p>";
-        echo "<p>Plugins used by only the teachers $lalo</p>";
-        echo "<p>Plugins only for the admins $lalo</p>";
+        echo "<p>total plugins $total_plugins</p>";
+        echo "<p>Plugins used by student $total_students</p>";
+        echo "<p>Plugins used by only the teachers $total_teachers</p>";
+        echo "<p>Plugins only for the admins $total_admins</p>";
+        echo html_writer::end_div();
+        echo html_writer::start_div('col-6');
         echo "<p>Plugins that create content (pages, activities, documents) $lalo</p>";
         echo "<p>Plugins that help evaluate (quiz, assignment, proctoring, etc.) $lalo</p>";
+        echo html_writer::end_div();
+        echo html_writer::end_div();
+        */
+        echo html_writer::end_div();
+        
         break;
     case 'detailed':
         echo $OUTPUT->heading(get_string('detailedbreakdown', 'report_mitewiw'));
-
+        echo html_writer::empty_tag('hr');
         $pm = \core_plugin_manager::instance();
         $types = $pm->get_plugin_types();
-
-        echo "<hr>";
-
         foreach ($types as $t => $path) {
             $plugins = $pm->get_installed_plugins($t);
             if (count($plugins)===0) {
@@ -226,19 +329,19 @@ switch ($view) {
                             } 
                         }
                     }
-                    $main_user = helper::determine_main_user($t, $parent);
-                    /*if (str_contains($t, "tool")) {
-                        $main_user = get_string('pluginadmin', 'report_mitewiw');
-                    }*/
+                    $simple = '';
+                    $main_user   = helper::determine_main_user($t, $simple);
+                    $criticality = helper::determine_criticality($simple);
 
+                    $version = isset($plug_info->release)? "($plug_info->release) $plug_info->versiondisk" : $plug_info->versiondisk;
                     $table->data[] = [
                         $plug_info->displayname, 
                         $frankenstein, 
                         $type, 
                         $main_user, 
+                        $criticality, 
                         'Not yet', 
-                        'Not yet', 
-                        $plug_info->versiondisk,
+                        $version,
                         $external_source,
                         'Not yet',
                         'Not yet'];
@@ -248,6 +351,11 @@ switch ($view) {
             }
             echo "<hr>";
         }
+        break;
+    case 'ltis':
+        echo $OUTPUT->heading(get_string('ltibreakdown', 'report_mitewiw'));
+        $lalo = helper::get_nodef();
+        echo "<p>ltis not yet computed $lalo</p>";
         break;
     default:
         echo $OUTPUT->heading(get_string('notyet', 'report_mitewiw'));

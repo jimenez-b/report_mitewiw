@@ -33,14 +33,17 @@ $string['tab_overview']         = 'Overview';
 $string['tab_totals']           = 'Totals';
 $string['tab_usage']            = 'Usage';
 $string['tab_detailed']         = 'Detailed breakdown';
+$string['tab_ltis']             = 'LTIs use';
 $string['generaloverview']      = 'General Overview of plugins';
 $string['usageoverview']        = 'Usage Overview of plugins';
 $string['detailedbreakdown']    = 'Detailed view of plugins';
+$string['ltibreakdown']         = 'Detailed report of LTI usage';
 $string['introreport']          = 'Mitêwiw, the Cree word for a person who practices medicine, or a shaman, is a tool developed by Concordia University to gather some information about the plugins present and their usage througout a Moodle installation';
 $string['componentsreport']     = 'This report is subdivided in three sections:';
 $string['componentsgeneral']    = 'A general overview of the current plugins';
 $string['componentsusage']      = 'Some information about the current usage of the plugins';
 $string['componentsdetailed']   = 'A detailed view of the plugins, divided by categories';
+$string['uncededland']          = "Concordia University is located on unceded Indigenous lands. The Kanien’kehá:ka Nation is recognized as the custodians of the lands and waters on which we gather today.";
 $string['moreinfo']             = 'For additional info on the word Mitêwiw, go to <a href="https://itwewina.altlab.app/word/mit%C3%AAwiw@vai/">itwêwina - Plains Cree Dictionary</a>';
 $string['indicator']            = 'Indicator';
 $string['value']                = 'Value';
@@ -49,6 +52,11 @@ $string['totalcore']            = 'Total number of plugins developed by Moodle H
 $string['totalcatalyst']        = 'Total number of plugins developed by Catalyst';
 $string['totalnoncatalyst']     = 'Total number of plugins developed by other third parties';
 $string['totalinternal']        = 'Total number of plugins developed internally';
+$string['totalcritical']        = 'Total number of critical impact plugins (direct impact on students)';
+$string['totalactive']          = 'Total number of actively used plugins (visible)';
+$string['totalcriticalshort']   = 'Critical (direct impact on students)';
+$string['totalactiveshort']     = 'Active (visible)';
+$string['active/critical']      = 'Critical / Visible';
 $string['totalchartcore']       = 'Moodle HQ/core';
 $string['totalchartcatalyst']   = 'Catalyst';
 $string['totalchartnoncatalyst']= 'Other third parties';
@@ -62,9 +70,9 @@ $string['pluginadmin']          = 'Plugins only for the admins';
 $string['pluginstudent']        = 'Plugins used by student';
 $string['pluginteacher']        = 'Plugins used by only the teachers';
 $string['pluginstudentteacher'] = 'Plugins used by students and teachers';
-
-/*
-        Nombre de plugins activement utilisés (visibles)	
-        
-        Nombre de plugins critiques (impact direct étudiants)
-        */
+$string['pluginstudentshort']   = 'Plugins student';
+$string['pluginteachershort']   = 'Plugins teachers';
+$string['pluginadminshort']     = 'Plugins admins';
+$string['criticalityhigh']      = 'High';
+$string['criticalitymedium']    = 'Medium';
+$string['criticalitylow']       = 'Low';

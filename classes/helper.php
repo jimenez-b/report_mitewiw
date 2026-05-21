@@ -27,20 +27,22 @@ namespace report_mitewiw;
 //defined('MOODLE_INTERNAL') || die();
 class helper {
 
-    private static $admin   = ['antivirus', 'auth', 'booktool', 'cleaner', 'datafield', 'datapreset', 'paygw', 'report', 'smsgateway', 'theme', 'tool', 'watool'];
-    private static $student = ['mod', 'assignsubmission', 'assignfeedback', 'block', 'ltiservice'];
-
+    private static array $admin    = ['aiplacement', 'aiprovider','antivirus', 'auth', 'booktool', 'cachelock', 'cachestore', 'calendartype', 'certificateelement', 'cleaner', 'cltr', 'communication', 'contenttype', 'customfield', 'dataformat', 'datafield', 'datapreset', 'enrol', 'factor', 'fileconverter', 'h5plib', 'logstore', 'paygw', 'profilefield', 'report', 'search', 'smsgateway', 'theme', 'tool', 'watool'];
+    private static array $student  = ['atto', 'mod', 'assignsubmission', 'assignfeedback', 'block', 'editor', 'filter', 'local', 'media', 'mlbackend', 'mnetservice', 'portfolio', 'repository', 'tiny', 'webservice'];
+    private static array $teacher  = ['availability', 'format', 'forumreport', 'gradeexport', 'gradeimport', 'gradereport', 'gradingform', 'ltiservice', 'message', 'qbank', 'qbehaviour', 'qformat','qtype', 'quiz', 'quizaccess', 'scormreport', 'workshopform', 'workshopallocation', 'workshopeval'];
+    private static array $actively = ['mod', 'block'];
     /*
         activity plugins - students
-        
-
+        admin tools - admins
+        antivirus - admins
         authentication - admins
         avilability restrictions - students
-        
+        blocks - students
         cahing - admins
         content bank - students
         course formats - students
-        
+        custom fields - admin
+        data formats - admin
         document converters - admins
         enrolments - students
         filters  - students
@@ -90,14 +92,41 @@ class helper {
         return  $type_to_get;
     }
     
-    public static function determine_main_user(string $type, string $parent) : string {
-        $principal_user = 'something else';
+    public static function determine_main_user(string $type, string &$simple_type = '') : string {
         if (in_array($type, self::$admin) ){
-            return $principal_user = get_string('pluginadmin', 'report_mitewiw');
+            $simple_type .= 'admin';
+            return get_string('pluginadmin', 'report_mitewiw');
         }
         if (in_array($type, self::$student) ){
-            return $principal_user = get_string('pluginstudent', 'report_mitewiw');
+            $simple_type .= 'student';
+            return get_string('pluginstudent', 'report_mitewiw');
         }
-        return $principal_user;
+        if (in_array($type, self::$teacher) ){
+            $simple_type .= 'teacher';
+            return get_string('pluginteacher', 'report_mitewiw'); 
+        }
+        return 'something else';
+    }
+
+    public static function determine_actively(string $type) : string {
+        if (in_array($type, self::$actively) ){
+            return 'actively';
+        }
+        return 'something else';
+    }
+    public static function determine_criticality(string $simple_type) : string {
+        $criticality ='';
+        switch ($simple_type) {
+            case 'student':
+                $criticality =  get_string('criticalityhigh', 'report_mitewiw');
+                break;
+            case 'teacher':
+                $criticality = get_string('criticalitymedium', 'report_mitewiw');
+                break;
+            case 'admin':
+                $criticality = get_string('criticalitylow', 'report_mitewiw');
+                break;
+        }
+        return $criticality;
     }
 }
