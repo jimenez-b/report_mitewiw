@@ -24,12 +24,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use \report_mitewiw\helper;
+use \report_mitewiw\local\helper;
 
 require(__DIR__.'/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 
-global $PAGE, $OUTPUT;
+global $PAGE, $OUTPUT, $DB;
 
 require_login();
 
@@ -69,20 +69,17 @@ $tabs = [
     ),
 ];
 echo $OUTPUT->tabtree($tabs, $view);
+$output = $PAGE->get_renderer('report_mitewiw');
 
 switch ($view) {
     case 'overview':
         echo $OUTPUT->heading(get_string('reportname', 'report_mitewiw'));
-        echo html_writer::start_div('');
-        echo html_writer::empty_tag('hr');
-        echo html_writer::tag('p', get_string('introreport', 'report_mitewiw'));
-        echo html_writer::tag('p', get_string('componentsreport', 'report_mitewiw'));
-        $items = [get_string('componentsgeneral', 'report_mitewiw'),get_string('componentsusage', 'report_mitewiw'),get_string('componentsdetailed', 'report_mitewiw')];
+        $items   = [get_string('componentlistgeneral', 'report_mitewiw'),
+                    get_string('componentlistusage', 'report_mitewiw'),
+                    get_string('componentlistdetailed', 'report_mitewiw'),
+                    get_string('componentlistltis', 'report_mitewiw')];
         $attributes = ['class' => 'list'];
-        echo html_writer::alist($items, $attributes, 'ol');
-        echo html_writer::tag('p', get_string('uncededland', 'report_mitewiw'));
-        echo html_writer::tag('p', get_string('moreinfo', 'report_mitewiw'));
-        echo html_writer::end_div();
+        echo $output->render_overview($items,$attributes);
         break;
     case 'totals':
         $total_plugins = 0;
@@ -356,6 +353,97 @@ switch ($view) {
         echo $OUTPUT->heading(get_string('ltibreakdown', 'report_mitewiw'));
         $lalo = helper::get_nodef();
         echo "<p>ltis not yet computed $lalo</p>";
+        $tableDB = 'course';
+        $select = "shortname NOT LIKE '%ERIC%' AND shortname NOT LIKE '%Template%' and id <> 1";
+        $conditions = null;
+        $sort = 'id';
+        $fields = 'id, shortname, fullname, idnumber, category, startdate, enddate';
+        //get courses
+        $rs = $DB->get_recordset_select($tableDB, $select, $conditions, $sort, $fields);
+        if ($rs->valid()) {
+            // The recordset contains some records.
+            $table = new html_table();
+            $table->attributes['class'] = 'generaltable';
+            $table->head = ['Course Shortname',
+                            'Course category',
+                            'Teacher name',
+                            'Teacher email',
+                            'Activity name',
+                            'LTI name',
+                            'LTI URL',
+                            'Preconfigured'];
+            foreach ($rs as $course) {
+                //get the course category
+                $course_cat = $DB->get_field('course_categories', 'name', ['id' => $course->category]);
+
+                //echo "<p>Record ID: $course->id</p>";
+                //echo "<p>Shortname: $course->shortname</p>";
+                //echo "<p>idnumber: $course->idnumber</p>";
+                //echo "<p>categoryid: $course->idnumber and name $course_cat</p>";
+                //echo "<p>startdate: $course->startdate</p>";
+                //echo "<p>enddate: $course->enddate</p>";
+                //echo "<p>----</p>";
+                $contextquery = $DB->get_record('context', ['instanceid' => $course->id, 'contextlevel' => 50],  'id,instanceid');
+                //echo "<p>contextquery id: $contextquery->id</p>";
+                //echo "<p>contextquery instanceid: $contextquery->instanceid</p>";
+                
+
+                
+                echo "<p>----</p>";
+                $sql =  "SELECT ra.id, ra.roleid,ra.contextid,ra.userid, u.lastname, u.firstname, u.email
+                           FROM mdl_role_assignments ra
+                     INNER JOIN mdl_user u ON u.id = ra.userid
+                          WHERE ra.contextid = :contextid
+                            AND ra.roleid = :roleid
+                       ORDER BY ra.userid ASC";
+                $params = array('contextid' => $contextquery->id, 'roleid' => 3);
+                $teachersquery = $DB->get_records_sql($sql, $params);
+                $teachers = $t_emails = '';
+                foreach ($teachersquery as $teacher) {
+                    //echo "<p>ra id: $teacher->id</p>";
+                    //echo "<p>ra roleid: $teacher->roleid</p>";
+                    //echo "<p>ra contextid: $teacher->contextid</p>";
+                    //echo "<p>ra userid: $teacher->userid</p>";
+                    //echo "<p>ra lastname: $teacher->lastname</p>";
+                    //echo "<p>ra firstname: $teacher->firstname</p>";
+                    //echo "<p>ra email: $teacher->email</p>";
+                    $teachers .= "<span id='$teacher->userid'>$teacher->firstname, $teacher->lastname</span>";
+                    $t_emails .= "<span id='email_$teacher->userid'>$teacher->email</span>";
+                }
+
+                $ltiquery = $DB->get_records('lti', array("course"=>$course->id),'','id,course,name,typeid');
+
+                foreach ($ltiquery as $lti) {
+                    $ltitypes = $DB->get_record('lti_types', array("id"=>$lti->typeid),'id,tooldomain,name,baseurl,state');
+                    $state = '';
+                    if ($ltitypes->state == 1) {
+                        $state = 'Active';
+                    } elseif ($ltitypes->state == 2) {
+                        $state = 'Pending';
+                    } else {
+                        $state = 'Rejected';
+                    }
+                    $table->data[] = [
+                        "<h2>COURSE: <a href='https://moodle.concordia.ca/moodle/course/view.php?id=$course->id'  target='_blank'>$course->shortname</a> </h2>", 
+                        $course_cat, 
+                        $teachers,
+                        $t_emails,
+                        $lti->name, 
+                        $ltitypes->name,
+                        "<a href='$ltitypes->baseurl' target='_blank'>$ltitypes->baseurl</a> </li>", 
+                        $state];
+                    $table->rowclasses[] = "$ltitypes->tooldomain";
+                        /*
+                         $additional_filter = "AND lt.tooldomain NOT LIKE '%yuja%'
+                                  AND lt.tooldomain NOT LIKE '%zoom%'
+                                  AND lt.tooldomain NOT LIKE '%betterknow%'";
+                                  */
+                }
+                echo html_writer::table($table);
+                echo "<hr>";
+            }
+        }
+        $rs->close(); 
         break;
     default:
         echo $OUTPUT->heading(get_string('notyet', 'report_mitewiw'));

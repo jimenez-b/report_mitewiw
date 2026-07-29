@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Renderer class for report_competency
+ * Renderer class for report_mitewiw
  *
  * @package    report_mitewiw
  * @author     Brandon Jimenez <brandon.jimenez@concordia.ca>
@@ -25,13 +25,14 @@
 
 namespace report_mitewiw\output;
 
+use plugin_renderer_base;
+//use renderable;
+use html_writer;
+
 defined('MOODLE_INTERNAL') || die;
 
-use plugin_renderer_base;
-use renderable;
-
 /**
- * Renderer class for the reports produced breakdown report
+ * Renderer class for the reports
  *
  * @package    report_mitewiw
  * @author     Brandon Jimenez <brandon.jimenez@concordia.ca>
@@ -40,14 +41,30 @@ use renderable;
  */
 class renderer extends plugin_renderer_base {
     /**
-     * Defer to template.
      *
-     * @param report $page
+     * 
      * @return string html for the page
      */
-    public function render_report(report $page) {
-        $data = $page->export_for_template($this);
-        return parent::render_from_template('report_mitewiw/report', $data);
+    public function render_overview(array $items, array $attributes) : string {
+
+        $output_left  = html_writer::empty_tag('hr');
+        $output_left .= html_writer::tag('p', get_string('introreport', 'report_mitewiw'));
+        $output_left .= html_writer::tag('p', get_string('componentsreport', 'report_mitewiw'));
+        $output_left .= html_writer::alist($items, $attributes, 'ol');
+        $output_left .= html_writer::tag('p', get_string('uncededland', 'report_mitewiw'));
+        $output_left .= html_writer::tag('p', get_string('moreinfo', 'report_mitewiw'));
+
+        $src = "https://www.concordia.ca/cunews/main/stories/2024/01/15/office-of-indigenous-directions-offers-new-cree-language-course-to-concordia-faculty-staff-and-students/_jcr_content/parsys/image.img.jpg/1705352125999.jpg";
+        $alt = "Cree culture elements";
+        $imageatrributes = ['class' => 'img-fluid'];
+        $output_right =  html_writer::img($src, $alt, $imageatrributes);
+
+        $left_column  = html_writer::div($output_left, 'col-lg-6');
+        $right_column = html_writer::div($output_right, 'col-lg-6');
+
+        $output = html_writer::div($left_column.$right_column, 'row');
+
+        return $output;
     }
 
 }

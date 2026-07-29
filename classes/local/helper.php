@@ -22,7 +22,9 @@
  * @copyright  Concordia University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace report_mitewiw;
+// report_mitewiw;
+namespace report_mitewiw\local;
+
 
 //defined('MOODLE_INTERNAL') || die();
 class helper {
