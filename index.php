@@ -63,6 +63,11 @@ $tabs = [
         get_string('tab_detailed', 'report_mitewiw')
     ),
     new tabobject(
+        'ltisummary',
+        new moodle_url($baseurl, ['view' => 'ltisummary']),
+        get_string('tab_lti_summary', 'report_mitewiw')
+    ),
+    new tabobject(
         'ltis',
         new moodle_url($baseurl, ['view' => 'ltis']),
         get_string('tab_ltis', 'report_mitewiw')
@@ -349,10 +354,13 @@ switch ($view) {
             echo "<hr>";
         }
         break;
+    case 'ltisummary':
+        echo $OUTPUT->heading(get_string('ltisummary', 'report_mitewiw'));
+        echo "<hr>";
+        echo html_writer::tag('p',helper::get_nodef()); 
+        break;
     case 'ltis':
         echo $OUTPUT->heading(get_string('ltibreakdown', 'report_mitewiw'));
-        $lalo = helper::get_nodef();
-        echo "<p>ltis not yet computed $lalo</p>";
         $tableDB = 'course';
         $select = "shortname NOT LIKE '%ERIC%' AND shortname NOT LIKE '%Template%' and id <> 1";
         $conditions = null;
@@ -384,12 +392,7 @@ switch ($view) {
                 //echo "<p>enddate: $course->enddate</p>";
                 //echo "<p>----</p>";
                 $contextquery = $DB->get_record('context', ['instanceid' => $course->id, 'contextlevel' => 50],  'id,instanceid');
-                //echo "<p>contextquery id: $contextquery->id</p>";
-                //echo "<p>contextquery instanceid: $contextquery->instanceid</p>";
-                
 
-                
-                echo "<p>----</p>";
                 $sql =  "SELECT ra.id, ra.roleid,ra.contextid,ra.userid, u.lastname, u.firstname, u.email
                            FROM mdl_role_assignments ra
                      INNER JOIN mdl_user u ON u.id = ra.userid
@@ -400,15 +403,9 @@ switch ($view) {
                 $teachersquery = $DB->get_records_sql($sql, $params);
                 $teachers = $t_emails = '';
                 foreach ($teachersquery as $teacher) {
-                    //echo "<p>ra id: $teacher->id</p>";
-                    //echo "<p>ra roleid: $teacher->roleid</p>";
-                    //echo "<p>ra contextid: $teacher->contextid</p>";
-                    //echo "<p>ra userid: $teacher->userid</p>";
-                    //echo "<p>ra lastname: $teacher->lastname</p>";
-                    //echo "<p>ra firstname: $teacher->firstname</p>";
-                    //echo "<p>ra email: $teacher->email</p>";
-                    $teachers .= "<span id='$teacher->userid'>$teacher->firstname, $teacher->lastname</span>";
-                    $t_emails .= "<span id='email_$teacher->userid'>$teacher->email</span>";
+                    $teachers .= "<span id='$teacher->userid'>$teacher->firstname, $teacher->lastname</span><br>";
+                    $t_emails .= "<span id='email_$teacher->userid'> <a href='mailto:$teacher->email'>$teacher->email</a></span><br>";
+
                 }
 
                 $ltiquery = $DB->get_records('lti', array("course"=>$course->id),'','id,course,name,typeid');
@@ -424,7 +421,7 @@ switch ($view) {
                         $state = 'Rejected';
                     }
                     $table->data[] = [
-                        "<h2>COURSE: <a href='https://moodle.concordia.ca/moodle/course/view.php?id=$course->id'  target='_blank'>$course->shortname</a> </h2>", 
+                        "<h6>COURSE: <a href='https://moodle.concordia.ca/moodle/course/view.php?id=$course->id'  target='_blank'>$course->shortname</a> </h6>", 
                         $course_cat, 
                         $teachers,
                         $t_emails,
@@ -439,11 +436,14 @@ switch ($view) {
                                   AND lt.tooldomain NOT LIKE '%betterknow%'";
                                   */
                 }
-                echo html_writer::table($table);
-                echo "<hr>";
+                
             }
         }
-        $rs->close(); 
+        $rs->close();
+
+        echo html_writer::table($table);
+        echo "<hr>";
+
         break;
     default:
         echo $OUTPUT->heading(get_string('notyet', 'report_mitewiw'));
