@@ -29,6 +29,20 @@ namespace report_mitewiw\local;
 //defined('MOODLE_INTERNAL') || die();
 class helper {
 
+    private int $total_plugins = 0;
+    private int $total_HQCore_plugins = 0;
+    private int $total_catalyst_plugins = 0;
+    private int $total_noncatalyst_plugins = 0;
+    private int $total_internal_plugins = 0;
+    private int $total_actively_used = 0;
+    private int $total_critical = 0;
+
+    private int $total_students = 0;
+    private int $total_teachers = 0;
+    private int $total_admins = 0;
+    private int $total_content = 0;
+    private int $total_evaluate = 0;
+    
     private static array $admin    = ['aiplacement', 'aiprovider','antivirus', 'auth', 'booktool', 'cachelock', 'cachestore', 'calendartype', 'certificateelement', 'cleaner', 'cltr', 'communication', 'contenttype', 'customfield', 'dataformat', 'datafield', 'datapreset', 'enrol', 'factor', 'fileconverter', 'h5plib', 'logstore', 'paygw', 'profilefield', 'report', 'search', 'smsgateway', 'theme', 'tool', 'watool'];
     private static array $student  = ['atto', 'mod', 'assignsubmission', 'assignfeedback', 'block', 'editor', 'filter', 'local', 'media', 'mlbackend', 'mnetservice', 'portfolio', 'repository', 'tiny', 'webservice'];
     private static array $teacher  = ['availability', 'format', 'forumreport', 'gradeexport', 'gradeimport', 'gradereport', 'gradingform', 'ltiservice', 'message', 'qbank', 'qbehaviour', 'qformat','qtype', 'quiz', 'quizaccess', 'scormreport', 'workshopform', 'workshopallocation', 'workshopeval'];
@@ -73,6 +87,117 @@ class helper {
         return  'yesdes';
     }
 
+    public function create_report_plugins() {
+        $pm = \core_plugin_manager::instance();
+        $types = $pm->get_plugin_types();
+
+        foreach ($types as $t => $path) {
+            $plugins = $pm->get_installed_plugins($t);
+            foreach ($plugins as $p => $version) {
+                $this->total_plugins++;
+                $frankenstein = (string) $t."_".$p;
+                $plug_info = $pm->get_plugin_info($frankenstein);
+                $actively = helper::determine_actively($t);
+                if ($actively == 'actively'){
+                    $this->total_actively_used++; 
+                }
+                $simple = '';
+                $main_user = helper::determine_main_user($t, $simple);
+                switch ($simple) {
+                    case 'student':
+                        $this->total_students++;
+                        $this->total_critical++;
+                        break;
+                    case 'teacher':
+                        $this->total_teachers++;
+                        break;
+                    case 'admin':
+                        $this->total_admins++;
+                        break;
+                }
+                if ($plug_info->source == 'std') {
+                    $this->total_HQCore_plugins ++;
+                } else {
+                    $external_source2 = $pm->get_remote_plugin_info($frankenstein, $plug_info->versiondisk, false);
+                    if (str_contains($external_source2->source, "catalyst")) {
+                        $this->total_catalyst_plugins ++;
+                    } else {
+                        if (str_contains($external_source2->source, "Concordia") || str_contains($external_source2->source, "jimenez-b") ) {
+                            $this->total_internal_plugins ++;
+                        } else {
+                            $this->total_noncatalyst_plugins ++;
+                        } 
+                    }
+                }
+            }
+        }
+    }
+    /*
+    $total_plugins = 0;
+    $total_HQCore_plugins = 0;
+    $total_catalyst_plugins = 0;
+    $total_noncatalyst_plugins = 0;
+    $total_internal_plugins = 0;
+    $total_actively_used = 0;
+    $total_critical = 0;
+
+    $pma = \core_plugin_manager::instance();
+    $types = $pma->get_plugin_types();
+
+    foreach ($types as $t => $path) {
+        $plugins = $pma->get_installed_plugins($t);
+        foreach ($plugins as $p => $version) {
+            $total_plugins ++;
+            $frankenstein = (string) $t."_".$p;
+            $plug_info = $pma->get_plugin_info($frankenstein);
+            //string for the type of plugin
+            //moodle standard plugin
+            if ($plug_info->source == 'std') {
+                $total_HQCore_plugins ++;
+            } else {
+                $external_source2 = $pma->get_remote_plugin_info($frankenstein, $plug_info->versiondisk, false);
+                if (str_contains($external_source2->source, "catalyst")) {
+                    $total_catalyst_plugins ++;
+                } else {
+                    if (str_contains($external_source2->source, "Concordia") || str_contains($external_source2->source, "jimenez-b") ) {
+                        $total_internal_plugins ++;
+                    } else {
+                        $total_noncatalyst_plugins ++;
+                    } 
+                }
+            }
+            $simple = '';
+            $main_user = helper::determine_main_user($t, $simple);
+            if ($simple == 'student'){
+                $total_critical++; 
+            }
+            $actively = helper::determine_actively($t);
+            if ($actively == 'actively'){
+                $total_actively_used++; 
+            }
+        }
+    }
+
+    foreach ($types as $t => $path) {
+            $plugins = $pmb->get_installed_plugins($t);
+            foreach ($plugins as $p => $version) {
+                $total_plugins ++;
+                $simple = '';
+                $main_user = helper::determine_main_user($t, $simple);
+                switch ($simple) {
+                    case 'student':
+                        $total_students++;
+                        break;
+                    case 'teacher':
+                        $total_teachers++;
+                        break;
+                    case 'admin':
+                        $total_admins++;
+                        break;
+                }
+            }
+        }
+    */
     public static function convert_type (string $type) : string {
 
         if ($type == 'std') {
@@ -116,6 +241,7 @@ class helper {
         }
         return 'something else';
     }
+
     public static function determine_criticality(string $simple_type) : string {
         $criticality ='';
         switch ($simple_type) {

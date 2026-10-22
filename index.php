@@ -251,22 +251,6 @@ switch ($view) {
         echo $OUTPUT->render($chart);
         echo html_writer::end_div();
         echo html_writer::end_div();
-        /*
-        echo html_writer::empty_tag('hr');
-        echo html_writer::start_div('row');
-        echo html_writer::start_div('col-6');
-        $lalo = helper::get_nodef();
-        echo "<p>total plugins $total_plugins</p>";
-        echo "<p>Plugins used by student $total_students</p>";
-        echo "<p>Plugins used by only the teachers $total_teachers</p>";
-        echo "<p>Plugins only for the admins $total_admins</p>";
-        echo html_writer::end_div();
-        echo html_writer::start_div('col-6');
-        echo "<p>Plugins that create content (pages, activities, documents) $lalo</p>";
-        echo "<p>Plugins that help evaluate (quiz, assignment, proctoring, etc.) $lalo</p>";
-        echo html_writer::end_div();
-        echo html_writer::end_div();
-        */
         echo html_writer::end_div();
         
         break;
@@ -284,7 +268,6 @@ switch ($view) {
                 $parent = $pm->get_parent_of_subplugin ($t);
                 $type_displayname = helper::get_type_string($t, $parent);
                 echo html_writer::tag('h3', $type_displayname." ($t)");
-                //echo "<h2>$t</h2>";
                 $table = new html_table();
                 $table->attributes['class'] = 'generaltable';
                 $table->head = ['Plugin name',
@@ -297,8 +280,6 @@ switch ($view) {
                                 'Source/URL',
                                 'Installation date',
                                 'Last update'];
-                //$lolo3 = new helper;
-                //$testclass = report_mitewiw\helper::get_yesdef();
                 foreach ($plugins as $p => $version) {
                     $frankenstein = (string) $t."_".$p;
                     $external = $pm->plugin_external_source($frankenstein);
@@ -309,10 +290,10 @@ switch ($view) {
                     echo "<p>$frankenstein</p><br>";*/
                     $plug_info = $pm->get_plugin_info($frankenstein);
 
-                    if ($frankenstein == 'report_mitewiw' ) {
+                    /*if ($frankenstein == 'report_mitewiw' ) {
                         $external_source = $pm->get_remote_plugin_info($frankenstein, $plug_info->versiondisk, false);
                         echo var_dump($external_source);
-                    }
+                    }*/
                     //string for the type of plugin
                     //moodle standard plugin
                     if ($plug_info->source == 'std') {
